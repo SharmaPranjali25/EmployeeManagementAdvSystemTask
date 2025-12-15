@@ -1,0 +1,50 @@
+2025-12-15T00:00:18.866+05:30  INFO 16440 --- [RMI TCP Connection(10)-127.0.0.1] inMXBeanRegistrar$SpringApplicationAdmin : Application shutdown requested.
+2025-12-15T00:00:18.877+05:30  INFO 16440 --- [RMI TCP Connection(10)-127.0.0.1] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+2025-12-15T00:00:18.885+05:30  INFO 16440 --- [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+2025-12-15T00:00:18.892+05:30  INFO 16440 --- [RMI TCP Connection(10)-127.0.0.1] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-12-15T00:00:18.895+05:30  INFO 16440 --- [RMI TCP Connection(10)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-12-15T00:00:18.904+05:30  INFO 16440 --- [RMI TCP Connection(10)-127.0.0.1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2025-12-15T00:00:21.782+05:30  INFO 11760 --- [main] ployeeManagementSystemAdvanceApplication : Starting EmployeeManagementSystemAdvanceApplication using Java 21.0.7 with PID 11760 (C:\Users\hp\OneDrive\Desktop\EmployeeManagementSystemAdvance\EmployeeManagementSystemAdvance\target\classes started by Pranjali in C:\Users\hp\OneDrive\Desktop\EmployeeManagementSystemAdvance\EmployeeManagementSystemAdvance)
+2025-12-15T00:00:21.785+05:30 DEBUG 11760 --- [main] ployeeManagementSystemAdvanceApplication : Running with Spring Boot v4.0.0, Spring v7.0.1
+2025-12-15T00:00:21.786+05:30  INFO 11760 --- [main] ployeeManagementSystemAdvanceApplication : No active profile set, falling back to 1 default profile: "default"
+2025-12-15T00:00:22.823+05:30  INFO 11760 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-15T00:00:22.878+05:30  INFO 11760 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 45 ms. Found 1 JPA repository interface.
+2025-12-15T00:00:23.422+05:30  INFO 11760 --- [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 7645 (http)
+2025-12-15T00:00:23.440+05:30  INFO 11760 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-15T00:00:23.440+05:30  INFO 11760 --- [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.14]
+2025-12-15T00:00:23.510+05:30  INFO 11760 --- [main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1654 ms
+2025-12-15T00:00:23.760+05:30  INFO 11760 --- [main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-15T00:00:23.808+05:30  INFO 11760 --- [main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 7.1.8.Final
+2025-12-15T00:00:24.219+05:30  INFO 11760 --- [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-15T00:00:24.251+05:30  INFO 11760 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-15T00:00:24.595+05:30  INFO 11760 --- [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@59043741
+2025-12-15T00:00:24.598+05:30  INFO 11760 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-12-15T00:00:24.659+05:30  WARN 11760 --- [main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-15T00:00:24.675+05:30  INFO 11760 --- [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/Employee_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.42
+	Default catalog/schema: Employee_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DatasourceConnectionProviderImpl
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-12-15T00:00:25.535+05:30  INFO 11760 --- [main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-15T00:00:25.602+05:30  INFO 11760 --- [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-15T00:00:25.699+05:30  INFO 11760 --- [main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-12-15T00:00:25.883+05:30  WARN 11760 --- [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-15T00:00:25.931+05:30  INFO 11760 --- [main] o.s.v.b.OptionalValidatorFactoryBean     : Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+2025-12-15T00:00:26.542+05:30  INFO 11760 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 13 endpoints beneath base path '/actuator'
+2025-12-15T00:00:26.627+05:30  INFO 11760 --- [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 7645 (http) with context path '/'
+2025-12-15T00:00:26.638+05:30  INFO 11760 --- [main] ployeeManagementSystemAdvanceApplication : Started EmployeeManagementSystemAdvanceApplication in 5.426 seconds (process running for 6.22)
+2025-12-15T00:00:27.195+05:30  INFO 11760 --- [RMI TCP Connection(4)-127.0.0.1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-12-15T00:00:27.195+05:30  INFO 11760 --- [RMI TCP Connection(4)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-12-15T00:00:27.197+05:30  INFO 11760 --- [RMI TCP Connection(4)-127.0.0.1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2025-12-15T00:00:44.599+05:30  INFO 11760 --- [http-nio-7645-exec-10] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 770 ms
+2025-12-15T03:29:14.971+05:30  WARN 11760 --- [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=3h16m50s95ms102µs600ns).
+2025-12-15T08:04:56.453+05:30  WARN 11760 --- [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=4h35m15s856ms313µs200ns).
+2025-12-15T09:16:25.951+05:30  WARN 11760 --- [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1h59s404ms924µs600ns).
+2025-12-15T10:26:50.839+05:30  WARN 11760 --- [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=53m24s664ms985µs600ns).
