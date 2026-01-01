@@ -1,0 +1,50 @@
+# ============================================
+# Test Configuration
+# Location: src/test/resources/application-test.yml
+# ============================================
+
+server:
+  port: 3335  # Random port for tests
+
+spring:
+  # Use H2 in-memory database for tests (NOT MySQL)
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # Create tables automatically for tests
+    show-sql: false  # Reduce test noise
+    open-in-view: false
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        format_sql: false
+
+  sql:
+    init:
+      mode: never  # Don't run SQL init scripts
+
+logging:
+  level:
+    root: WARN
+    com.example.EmployeeManagementSystemAdvance: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.springframework.boot: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+app:
+  title: Employee Management System - Test
+  description: Test configuration for Employee Management System

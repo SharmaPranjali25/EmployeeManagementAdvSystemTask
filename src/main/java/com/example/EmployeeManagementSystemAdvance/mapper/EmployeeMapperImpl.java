@@ -39,7 +39,14 @@ public class EmployeeMapperImpl implements EmployeeMapper {
         dto.setFirstName(employee.getFirstName());
         dto.setLastName(employee.getLastName());
         dto.setDepartment(employee.getDepartment());
-        dto.setSalary((int) employee.getSalary());
+        
+        // Handle Double salary - convert to int safely
+        if (employee.getSalary() != null) {
+            dto.setSalary(employee.getSalary().intValue());
+        } else {
+            dto.setSalary(0); // or throw exception, depending on business logic
+        }
+        
         return dto;
     }
 }

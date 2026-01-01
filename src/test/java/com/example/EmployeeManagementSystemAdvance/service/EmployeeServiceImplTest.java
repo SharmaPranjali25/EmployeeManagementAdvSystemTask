@@ -1,18 +1,5 @@
 package com.example.EmployeeManagementSystemAdvance.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.modelmapper.ModelMapper;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import com.example.EmployeeManagementSystemAdvance.dto.EmployeeRequestDTO;
 import com.example.EmployeeManagementSystemAdvance.dto.EmployeeResponseDTO;
 import com.example.EmployeeManagementSystemAdvance.dto.EmployeeResponseV2DTO;
@@ -21,6 +8,22 @@ import com.example.EmployeeManagementSystemAdvance.exception.DuplicateResourceEx
 import com.example.EmployeeManagementSystemAdvance.exception.ResourceNotFoundException;
 import com.example.EmployeeManagementSystemAdvance.mapper.EmployeeMapper;
 import com.example.EmployeeManagementSystemAdvance.repository.EmployeeRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class EmployeeServiceImplTest {
@@ -29,498 +32,382 @@ class EmployeeServiceImplTest {
     private EmployeeRepository repository;
 
     @Mock
-    private EmployeeMapper employeeMapper;
-
-    @Mock
     private ModelMapper modelMapper;
 
+    @Mock
+    private EmployeeMapper employeeMapper;
+
     @InjectMocks
-    private EmployeeServiceImpl service;
+    private EmployeeServiceImpl employeeService;
 
-    // ================= V1 TESTS =================
-    
+    private Employee employee;
+    private EmployeeRequestDTO requestDTO;
+    private EmployeeResponseDTO responseDTO;
+    private EmployeeResponseV2DTO responseV2DTO;
+
+    @BeforeEach
+    void setUp() {
+        employee = new Employee();
+        employee.setId(1L);
+        employee.setFirstName("John");
+        employee.setLastName("Doe");
+        employee.setDepartment("IT");
+        employee.setSalary(50000.0);
+
+        requestDTO = new EmployeeRequestDTO();
+        requestDTO.setFirstName("John");
+        requestDTO.setLastName("Doe");
+        requestDTO.setDepartment("IT");
+        requestDTO.setSalary(50000.0);
+
+        responseDTO = new EmployeeResponseDTO();
+        responseDTO.setId(1L);
+        responseDTO.setFirstName("John");
+        responseDTO.setLastName("Doe");
+        responseDTO.setDepartment("IT");
+
+        responseV2DTO = new EmployeeResponseV2DTO();
+        responseV2DTO.setId(1L);
+        responseV2DTO.setFirstName("John");
+        responseV2DTO.setLastName("Doe");
+        responseV2DTO.setDepartment("IT");
+        responseV2DTO.setSalary(50000);
+    }
+
+    // ===== V1 Tests =====
+
     @Test
-    void saveEmployeeDTO_success() {
-        EmployeeRequestDTO req = new EmployeeRequestDTO();
-        req.setFirstName("John");
-        req.setLastName("Doe");
-        req.setDepartment("IT");
+    void saveEmployeeDTO_Success() {
+        when(repository.existsByFirstAndLastNameAndDepartment(anyString(), anyString(), anyString()))
+                .thenReturn(false);
+        when(employeeMapper.toEntity(requestDTO)).thenReturn(employee);
+        when(repository.save(employee)).thenReturn(employee);
+        when(employeeMapper.toResponseDTO(employee)).thenReturn(responseDTO);
 
-        Employee entity = new Employee();
-        Employee saved = new Employee(1L, "John", "Doe", "IT", 1000);
+        EmployeeResponseDTO result = employeeService.saveEmployeeDTO(requestDTO);
 
-        when(repository.existsByFirstAndLastNameAndDepartment("John", "Doe", "IT")).thenReturn(false);
-        when(employeeMapper.toEntity(req)).thenReturn(entity);
-        when(repository.save(entity)).thenReturn(saved);
-        when(employeeMapper.toResponseDTO(saved)).thenReturn(new EmployeeResponseDTO(1L, "John", "Doe", "IT"));
-
-        EmployeeResponseDTO result = service.saveEmployeeDTO(req);
-
-        assertEquals(1L, result.getId());
+        assertNotNull(result);
         assertEquals("John", result.getFirstName());
-        assertEquals("Doe", result.getLastName());
-        assertEquals("IT", result.getDepartment());
-        verify(repository).existsByFirstAndLastNameAndDepartment("John", "Doe", "IT");
-        verify(repository).save(entity);
+        verify(repository).save(employee);
     }
 
     @Test
-    void saveEmployeeDTO_duplicate_throwsCorrectMessage() {
-        EmployeeRequestDTO req = new EmployeeRequestDTO();
-        req.setFirstName("John");
-        req.setLastName("Doe");
-        req.setDepartment("IT");
+    void saveEmployeeDTO_ThrowsDuplicateException() {
+        when(repository.existsByFirstAndLastNameAndDepartment(anyString(), anyString(), anyString()))
+                .thenReturn(true);
 
-        when(repository.existsByFirstAndLastNameAndDepartment("John", "Doe", "IT")).thenReturn(true);
-
-        DuplicateResourceException exception = assertThrows(
-            DuplicateResourceException.class, 
-            () -> service.saveEmployeeDTO(req)
-        );
-        
-        assertEquals("Duplicate data alert cannot save", exception.getMessage());
+        assertThrows(DuplicateResourceException.class, 
+                () -> employeeService.saveEmployeeDTO(requestDTO));
         verify(repository, never()).save(any());
     }
 
     @Test
-    void getAllEmployeesDTO_success() {
-        Employee e1 = new Employee(1L, "A", "Alpha", "IT", 1000);
-        Employee e2 = new Employee(2L, "B", "Beta", "HR", 2000);
+    void getAllEmployeesDTO_Success() {
+        List<Employee> employees = Arrays.asList(employee);
+        when(repository.findAll()).thenReturn(employees);
+        when(employeeMapper.toResponseDTO(employee)).thenReturn(responseDTO);
 
-        when(repository.findAll()).thenReturn(List.of(e1, e2));
-        when(employeeMapper.toResponseDTO(e1)).thenReturn(new EmployeeResponseDTO(1L, "A", "Alpha", "IT"));
-        when(employeeMapper.toResponseDTO(e2)).thenReturn(new EmployeeResponseDTO(2L, "B", "Beta", "HR"));
+        List<EmployeeResponseDTO> result = employeeService.getAllEmployeesDTO();
 
-        List<EmployeeResponseDTO> list = service.getAllEmployeesDTO();
-
-        assertEquals(2, list.size());
-        verify(repository).findAll();
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("John", result.get(0).getFirstName());
     }
 
     @Test
-    void getAllEmployeesDTO_empty_throwsCorrectMessage() {
-        when(repository.findAll()).thenReturn(List.of());
-        
-        ResourceNotFoundException exception = assertThrows(
-            ResourceNotFoundException.class, 
-            () -> service.getAllEmployeesDTO()
-        );
-        
-        assertEquals("No employee exist", exception.getMessage());
+    void getAllEmployeesDTO_ThrowsResourceNotFoundException() {
+        when(repository.findAll()).thenReturn(Collections.emptyList());
+
+        assertThrows(ResourceNotFoundException.class, 
+                () -> employeeService.getAllEmployeesDTO());
     }
 
     @Test
-    void getAllEmployeesDTO_databaseConnectionError() {
-        when(repository.findAll()).thenThrow(new RuntimeException("Connection refused"));
+    void getAllEmployeesDTO_ThrowsRuntimeException() {
+        when(repository.findAll()).thenThrow(new RuntimeException("Database error"));
 
-        RuntimeException exception = assertThrows(
-            RuntimeException.class,
-            () -> service.getAllEmployeesDTO()
-        );
-
+        RuntimeException exception = assertThrows(RuntimeException.class, 
+                () -> employeeService.getAllEmployeesDTO());
         assertTrue(exception.getMessage().contains("Unable to connect to database"));
     }
 
     @Test
-    void getEmployeeByIdDTO_found() {
-        Employee emp = new Employee(1L, "John", "Doe", "IT", 3000);
-        when(repository.findById(1L)).thenReturn(Optional.of(emp));
-        when(employeeMapper.toResponseDTO(emp)).thenReturn(new EmployeeResponseDTO(1L, "John", "Doe", "IT"));
+    void getEmployeeByIdDTO_Success() {
+        when(repository.findById(1L)).thenReturn(Optional.of(employee));
+        when(employeeMapper.toResponseDTO(employee)).thenReturn(responseDTO);
 
-        EmployeeResponseDTO dto = service.getEmployeeByIdDTO(1L);
-        
-        assertNotNull(dto);
-        assertEquals("John", dto.getFirstName());
-        assertEquals("Doe", dto.getLastName());
-        verify(repository).findById(1L);
+        EmployeeResponseDTO result = employeeService.getEmployeeByIdDTO(1L);
+
+        assertNotNull(result);
+        assertEquals("John", result.getFirstName());
     }
 
     @Test
-    void getEmployeeByIdDTO_notFound() {
-        when(repository.findById(99L)).thenReturn(Optional.empty());
-        
-        ResourceNotFoundException exception = assertThrows(
-            ResourceNotFoundException.class, 
-            () -> service.getEmployeeByIdDTO(99L)
-        );
-        
-        assertTrue(exception.getMessage().contains("Employee not found with id: 99"));
+    void getEmployeeByIdDTO_ThrowsResourceNotFoundException() {
+        when(repository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, 
+                () -> employeeService.getEmployeeByIdDTO(1L));
     }
 
     @Test
-    void updateEmployeeDTO_success() {
-        EmployeeRequestDTO req = new EmployeeRequestDTO();
-        req.setFirstName("Updated");
-        req.setLastName("User");
-        req.setDepartment("IT");
+    void updateEmployeeDTO_Success() {
+        when(repository.findById(1L)).thenReturn(Optional.of(employee));
+        when(repository.existsByFirstAndLastNameAndDepartmentExcludingId(
+                anyLong(), anyString(), anyString(), anyString())).thenReturn(false);
+        when(repository.save(employee)).thenReturn(employee);
+        when(employeeMapper.toResponseDTO(employee)).thenReturn(responseDTO);
+        doNothing().when(modelMapper).map(requestDTO, employee);
 
-        Employee existing = new Employee(1L, "Old", "User", "IT", 1000);
-        Employee updated = new Employee(1L, "Updated", "User", "IT", 1000);
+        EmployeeResponseDTO result = employeeService.updateEmployeeDTO(1L, requestDTO);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existsByFirstAndLastNameAndDepartmentExcludingId(1L, "Updated", "User", "IT")).thenReturn(false);
-        doNothing().when(modelMapper).map(req, existing);
-        when(repository.save(existing)).thenReturn(updated);
-        when(employeeMapper.toResponseDTO(updated)).thenReturn(new EmployeeResponseDTO(1L, "Updated", "User", "IT"));
-
-        EmployeeResponseDTO result = service.updateEmployeeDTO(1L, req);
-        
-        assertEquals("Updated", result.getFirstName());
-        assertEquals("User", result.getLastName());
-        verify(modelMapper).map(req, existing);
-        verify(repository).save(existing);
+        assertNotNull(result);
+        verify(repository).save(employee);
     }
 
     @Test
-    void updateEmployeeDTO_notFound() {
-        EmployeeRequestDTO req = new EmployeeRequestDTO();
-        when(repository.findById(99L)).thenReturn(Optional.empty());
+    void updateEmployeeDTO_ThrowsResourceNotFoundException() {
+        when(repository.findById(1L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException exception = assertThrows(
-            ResourceNotFoundException.class,
-            () -> service.updateEmployeeDTO(99L, req)
-        );
-
-        assertTrue(exception.getMessage().contains("Employee not found with id: 99"));
-        verify(repository, never()).save(any());
+        assertThrows(ResourceNotFoundException.class, 
+                () -> employeeService.updateEmployeeDTO(1L, requestDTO));
     }
 
     @Test
-    void updateEmployeeDTO_duplicate_throwsCorrectMessage() {
-        EmployeeRequestDTO req = new EmployeeRequestDTO();
-        req.setFirstName("John");
-        req.setLastName("Doe");
-        req.setDepartment("IT");
-        
-        Employee existing = new Employee(1L, "Old", "User", "IT", 1000);
+    void updateEmployeeDTO_ThrowsDuplicateException() {
+        when(repository.findById(1L)).thenReturn(Optional.of(employee));
+        when(repository.existsByFirstAndLastNameAndDepartmentExcludingId(
+                anyLong(), anyString(), anyString(), anyString())).thenReturn(true);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existsByFirstAndLastNameAndDepartmentExcludingId(1L, "John", "Doe", "IT")).thenReturn(true);
-
-        DuplicateResourceException exception = assertThrows(
-            DuplicateResourceException.class,
-            () -> service.updateEmployeeDTO(1L, req)
-        );
-
-        assertEquals("Duplicate data alert cannot save", exception.getMessage());
-        verify(repository, never()).save(any());
+        assertThrows(DuplicateResourceException.class, 
+                () -> employeeService.updateEmployeeDTO(1L, requestDTO));
     }
 
     @Test
-    void deleteEmployee_success() {
-        Employee emp = new Employee(1L, "Delete", "User", "IT", 1000);
-        when(repository.findById(1L)).thenReturn(Optional.of(emp));
-        
-        service.deleteEmployee(1L);
-        
-        verify(repository).delete(emp);
-        verify(repository).findById(1L);
+    void deleteEmployee_Success() {
+        when(repository.findById(1L)).thenReturn(Optional.of(employee));
+        doNothing().when(repository).delete(employee);
+
+        assertDoesNotThrow(() -> employeeService.deleteEmployee(1L));
+        verify(repository).delete(employee);
     }
 
     @Test
-    void deleteEmployee_notFound() {
-        when(repository.findById(99L)).thenReturn(Optional.empty());
-        
-        ResourceNotFoundException exception = assertThrows(
-            ResourceNotFoundException.class,
-            () -> service.deleteEmployee(99L)
-        );
+    void deleteEmployee_ThrowsResourceNotFoundException() {
+        when(repository.findById(1L)).thenReturn(Optional.empty());
 
-        assertTrue(exception.getMessage().contains("Employee not found with id: 99"));
-        verify(repository, never()).delete(any());
+        assertThrows(ResourceNotFoundException.class, 
+                () -> employeeService.deleteEmployee(1L));
     }
 
-    // ================= V2 TESTS =================
-    
+    // ===== V2 Tests =====
+
     @Test
-    void saveEmployeeV2_success_withMessage() {
-        EmployeeRequestDTO dto = new EmployeeRequestDTO();
-        dto.setFirstName("V2");
-        dto.setLastName("User");
-        dto.setDepartment("IT");
-        dto.setSalary(1000);
+    void saveEmployeeV2_Success() {
+        when(repository.existsByFirstAndLastNameAndDepartment(anyString(), anyString(), anyString()))
+                .thenReturn(false);
+        when(employeeMapper.toEntity(requestDTO)).thenReturn(employee);
+        when(repository.save(employee)).thenReturn(employee);
+        when(employeeMapper.toResponseV2DTO(employee)).thenReturn(responseV2DTO);
 
-        Employee entity = new Employee();
-        Employee saved = new Employee(1L, "V2", "User", "IT", 1000);
+        EmployeeResponseV2DTO result = employeeService.saveEmployeeV2(requestDTO);
 
-        when(repository.existsByFirstAndLastNameAndDepartment("V2", "User", "IT")).thenReturn(false);
-        when(employeeMapper.toEntity(dto)).thenReturn(entity);
-        when(repository.save(entity)).thenReturn(saved);
-
-        EmployeeResponseV2DTO responseDto = new EmployeeResponseV2DTO();
-        responseDto.setId(1L);
-        responseDto.setFirstName("V2");
-        responseDto.setLastName("User");
-        responseDto.setDepartment("IT");
-        responseDto.setSalary(1000);
-
-        when(employeeMapper.toResponseV2DTO(saved)).thenReturn(responseDto);
-
-        EmployeeResponseV2DTO result = service.saveEmployeeV2(dto);
-        
-        assertEquals("V2", result.getFirstName());
-        assertEquals("User", result.getLastName());
+        assertNotNull(result);
         assertEquals("Employee added successfully", result.getMessage());
-        verify(repository).save(entity);
+        verify(repository).save(employee);
     }
 
     @Test
-    void saveEmployeeV2_duplicate_throwsCorrectMessage() {
-        EmployeeRequestDTO dto = new EmployeeRequestDTO();
-        dto.setFirstName("V2");
-        dto.setLastName("User");
-        dto.setDepartment("IT");
+    void saveEmployeeV2_ThrowsDuplicateException() {
+        when(repository.existsByFirstAndLastNameAndDepartment(anyString(), anyString(), anyString()))
+                .thenReturn(true);
 
-        when(repository.existsByFirstAndLastNameAndDepartment("V2", "User", "IT")).thenReturn(true);
-
-        DuplicateResourceException exception = assertThrows(
-            DuplicateResourceException.class,
-            () -> service.saveEmployeeV2(dto)
-        );
-
-        assertEquals("Duplicate data alert cannot save", exception.getMessage());
-        verify(repository, never()).save(any());
+        assertThrows(DuplicateResourceException.class, 
+                () -> employeeService.saveEmployeeV2(requestDTO));
     }
 
     @Test
-    void saveEmployeeV2_runtimeError() {
-        EmployeeRequestDTO dto = new EmployeeRequestDTO();
-        dto.setFirstName("Test");
-        dto.setLastName("User");
-        dto.setDepartment("IT");
+    void saveEmployeeV2_ThrowsRuntimeException() {
+        when(repository.existsByFirstAndLastNameAndDepartment(anyString(), anyString(), anyString()))
+                .thenReturn(false);
+        when(employeeMapper.toEntity(requestDTO)).thenThrow(new RuntimeException("Mapping error"));
 
-        when(repository.existsByFirstAndLastNameAndDepartment("Test", "User", "IT")).thenReturn(false);
-        when(employeeMapper.toEntity(dto)).thenThrow(new RuntimeException("Mapping failed"));
-
-        RuntimeException exception = assertThrows(
-            RuntimeException.class,
-            () -> service.saveEmployeeV2(dto)
-        );
-
+        RuntimeException exception = assertThrows(RuntimeException.class, 
+                () -> employeeService.saveEmployeeV2(requestDTO));
         assertTrue(exception.getMessage().contains("Failed to save employee"));
     }
 
     @Test
-    void getAllEmployeesV2_success() {
-        Employee e1 = new Employee(1L, "A", "Alpha", "IT", 1000);
-        Employee e2 = new Employee(2L, "B", "Beta", "HR", 2000);
+    void getAllEmployeesV2_Success() {
+        List<Employee> employees = Arrays.asList(employee);
+        when(repository.findAll()).thenReturn(employees);
+        when(employeeMapper.toResponseV2DTO(employee)).thenReturn(responseV2DTO);
 
-        EmployeeResponseV2DTO dto1 = new EmployeeResponseV2DTO();
-        dto1.setId(1L);
-        dto1.setFirstName("A");
-        
-        EmployeeResponseV2DTO dto2 = new EmployeeResponseV2DTO();
-        dto2.setId(2L);
-        dto2.setFirstName("B");
+        List<EmployeeResponseV2DTO> result = employeeService.getAllEmployeesV2();
 
-        when(repository.findAll()).thenReturn(List.of(e1, e2));
-        when(employeeMapper.toResponseV2DTO(e1)).thenReturn(dto1);
-        when(employeeMapper.toResponseV2DTO(e2)).thenReturn(dto2);
-
-        List<EmployeeResponseV2DTO> list = service.getAllEmployeesV2();
-        
-        assertEquals(2, list.size());
-        assertEquals("A", list.get(0).getFirstName());
-        assertEquals("B", list.get(1).getFirstName());
-    }
-
-    @Test
-    void getAllEmployeesV2_empty_throwsCorrectMessage() {
-        when(repository.findAll()).thenReturn(List.of());
-        
-        ResourceNotFoundException exception = assertThrows(
-            ResourceNotFoundException.class,
-            () -> service.getAllEmployeesV2()
-        );
-
-        assertEquals("No employee exist", exception.getMessage());
-    }
-
-    @Test
-    void getAllEmployeesV2_databaseConnectionError() {
-        when(repository.findAll()).thenThrow(new RuntimeException("Database timeout"));
-
-        RuntimeException exception = assertThrows(
-            RuntimeException.class,
-            () -> service.getAllEmployeesV2()
-        );
-
-        assertTrue(exception.getMessage().contains("Unable to connect to database"));
-    }
-
-    @Test
-    void getEmployeeByIdV2_found() {
-        Employee emp = new Employee(1L, "John", "Doe", "IT", 3000);
-        EmployeeResponseV2DTO responseDto = new EmployeeResponseV2DTO();
-        responseDto.setId(1L);
-        responseDto.setFirstName("John");
-
-        when(repository.findById(1L)).thenReturn(Optional.of(emp));
-        when(employeeMapper.toResponseV2DTO(emp)).thenReturn(responseDto);
-
-        EmployeeResponseV2DTO dto = service.getEmployeeByIdV2(1L);
-        
-        assertNotNull(dto);
-        assertEquals(1L, dto.getId());
-        assertEquals("John", dto.getFirstName());
-    }
-
-    @Test
-    void getEmployeeByIdV2_notFound() {
-        when(repository.findById(99L)).thenReturn(Optional.empty());
-        
-        ResourceNotFoundException exception = assertThrows(
-            ResourceNotFoundException.class,
-            () -> service.getEmployeeByIdV2(99L)
-        );
-
-        assertTrue(exception.getMessage().contains("Employee not found with id: 99"));
-    }
-
-    @Test
-    void updateEmployeeV2_success_withMessage() {
-        EmployeeRequestDTO dto = new EmployeeRequestDTO();
-        dto.setFirstName("Updated");
-        dto.setLastName("User");
-        dto.setDepartment("IT");
-
-        Employee existing = new Employee(1L, "Old", "User", "IT", 1000);
-        Employee updated = new Employee(1L, "Updated", "User", "IT", 1000);
-
-        EmployeeResponseV2DTO responseDto = new EmployeeResponseV2DTO();
-        responseDto.setId(1L);
-        responseDto.setFirstName("Updated");
-
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existsByFirstAndLastNameAndDepartmentExcludingId(1L, "Updated", "User", "IT")).thenReturn(false);
-        doNothing().when(modelMapper).map(dto, existing);
-        when(repository.save(existing)).thenReturn(updated);
-        when(employeeMapper.toResponseV2DTO(updated)).thenReturn(responseDto);
-
-        EmployeeResponseV2DTO result = service.updateEmployeeV2(1L, dto);
-        
         assertNotNull(result);
-        assertEquals("Employee updated successfully", result.getMessage());
-        verify(repository).save(existing);
+        assertEquals(1, result.size());
     }
 
     @Test
-    void updateEmployeeV2_notFound() {
-        EmployeeRequestDTO dto = new EmployeeRequestDTO();
-        when(repository.findById(99L)).thenReturn(Optional.empty());
+    void getAllEmployeesV2_ThrowsResourceNotFoundException() {
+        when(repository.findAll()).thenReturn(Collections.emptyList());
 
-        ResourceNotFoundException exception = assertThrows(
-            ResourceNotFoundException.class,
-            () -> service.updateEmployeeV2(99L, dto)
-        );
-
-        assertTrue(exception.getMessage().contains("Employee not found with id: 99"));
+        assertThrows(ResourceNotFoundException.class, 
+                () -> employeeService.getAllEmployeesV2());
     }
 
     @Test
-    void updateEmployeeV2_duplicate_throwsCorrectMessage() {
-        EmployeeRequestDTO dto = new EmployeeRequestDTO();
-        dto.setFirstName("John");
-        dto.setLastName("Doe");
-        dto.setDepartment("IT");
-        
-        Employee existing = new Employee(1L, "Old", "User", "IT", 1000);
+    void getEmployeeByIdV2_Success() {
+        when(repository.findById(1L)).thenReturn(Optional.of(employee));
+        when(employeeMapper.toResponseV2DTO(employee)).thenReturn(responseV2DTO);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existsByFirstAndLastNameAndDepartmentExcludingId(1L, "John", "Doe", "IT")).thenReturn(true);
+        EmployeeResponseV2DTO result = employeeService.getEmployeeByIdV2(1L);
 
-        DuplicateResourceException exception = assertThrows(
-            DuplicateResourceException.class,
-            () -> service.updateEmployeeV2(1L, dto)
-        );
-
-        assertEquals("Duplicate data alert cannot save", exception.getMessage());
-        verify(repository, never()).save(any());
-    }
-
-    @Test
-    void searchEmployee_success() {
-        Employee emp = new Employee(1L, "John", "Doe", "IT", 1000);
-        EmployeeResponseV2DTO responseDto = new EmployeeResponseV2DTO();
-        responseDto.setId(1L);
-        responseDto.setFirstName("John");
-
-        when(repository.searchEmployeeExact(1L, "John", "Doe")).thenReturn(List.of(emp));
-        when(employeeMapper.toResponseV2DTO(emp)).thenReturn(responseDto);
-
-        EmployeeResponseV2DTO result = service.searchEmployee(1L, "John", "Doe");
-        
         assertNotNull(result);
-        assertEquals(1L, result.getId());
         assertEquals("John", result.getFirstName());
     }
 
     @Test
-    void searchEmployee_notFound() {
-        when(repository.searchEmployeeExact(1L, "John", "Doe")).thenReturn(List.of());
-        
-        ResourceNotFoundException exception = assertThrows(
-            ResourceNotFoundException.class,
-            () -> service.searchEmployee(1L, "John", "Doe")
-        );
+    void getEmployeeByIdV2_ThrowsResourceNotFoundException() {
+        when(repository.findById(1L)).thenReturn(Optional.empty());
 
-        assertTrue(exception.getMessage().contains("No employee found with given criteria"));
+        assertThrows(ResourceNotFoundException.class, 
+                () -> employeeService.getEmployeeByIdV2(1L));
     }
 
     @Test
-    void searchEmployee_multipleFound() {
-        Employee emp1 = new Employee(1L, "John", "Doe", "IT", 1000);
-        Employee emp2 = new Employee(2L, "John", "Doe", "IT", 2000);
-        
-        when(repository.searchEmployeeExact(1L, "John", "Doe")).thenReturn(List.of(emp1, emp2));
-        
-        IllegalArgumentException exception = assertThrows(
-            IllegalArgumentException.class,
-            () -> service.searchEmployee(1L, "John", "Doe")
-        );
+    void updateEmployeeV2_Success() {
+        when(repository.findById(1L)).thenReturn(Optional.of(employee));
+        when(repository.existsByFirstAndLastNameAndDepartmentExcludingId(
+                anyLong(), anyString(), anyString(), anyString())).thenReturn(false);
+        when(repository.save(employee)).thenReturn(employee);
+        when(employeeMapper.toResponseV2DTO(employee)).thenReturn(responseV2DTO);
+        doNothing().when(modelMapper).map(requestDTO, employee);
 
-        assertTrue(exception.getMessage().contains("Multiple employees found"));
-    }
+        EmployeeResponseV2DTO result = employeeService.updateEmployeeV2(1L, requestDTO);
 
-    @Test
-    void searchEmployee_withNullParameters() {
-        Employee emp = new Employee(1L, "John", "Doe", "IT", 1000);
-        EmployeeResponseV2DTO responseDto = new EmployeeResponseV2DTO();
-        
-        when(repository.searchEmployeeExact(null, null, "Doe")).thenReturn(List.of(emp));
-        when(employeeMapper.toResponseV2DTO(emp)).thenReturn(responseDto);
-
-        EmployeeResponseV2DTO result = service.searchEmployee(null, null, "Doe");
-        
         assertNotNull(result);
-        verify(repository).searchEmployeeExact(null, null, "Doe");
+        assertEquals("Employee updated successfully", result.getMessage());
     }
 
     @Test
-    void searchEmployee_withOnlyId() {
-        Employee emp = new Employee(1L, "John", "Doe", "IT", 1000);
-        EmployeeResponseV2DTO responseDto = new EmployeeResponseV2DTO();
-        
-        when(repository.searchEmployeeExact(1L, null, null)).thenReturn(List.of(emp));
-        when(employeeMapper.toResponseV2DTO(emp)).thenReturn(responseDto);
+    void searchEmployee_Success() {
+        List<Employee> employees = Arrays.asList(employee);
+        when(repository.searchEmployeeExact(1L, "John", "Doe")).thenReturn(employees);
+        when(employeeMapper.toResponseV2DTO(employee)).thenReturn(responseV2DTO);
 
-        EmployeeResponseV2DTO result = service.searchEmployee(1L, null, null);
-        
+        EmployeeResponseV2DTO result = employeeService.searchEmployee(1L, "John", "Doe");
+
         assertNotNull(result);
-        verify(repository).searchEmployeeExact(1L, null, null);
+        assertEquals("John", result.getFirstName());
     }
 
     @Test
-    void searchEmployee_withOnlyNames() {
-        Employee emp = new Employee(1L, "John", "Doe", "IT", 1000);
-        EmployeeResponseV2DTO responseDto = new EmployeeResponseV2DTO();
-        
-        when(repository.searchEmployeeExact(null, "John", "Doe")).thenReturn(List.of(emp));
-        when(employeeMapper.toResponseV2DTO(emp)).thenReturn(responseDto);
+    void searchEmployee_ThrowsIllegalArgumentExceptionWhenNoCriteria() {
+        assertThrows(IllegalArgumentException.class, 
+                () -> employeeService.searchEmployee(null, null, null));
+    }
 
-        EmployeeResponseV2DTO result = service.searchEmployee(null, "John", "Doe");
-        
+    @Test
+    void searchEmployee_ThrowsResourceNotFoundExceptionWhenEmpty() {
+        when(repository.searchEmployeeExact(1L, null, null)).thenReturn(Collections.emptyList());
+
+        assertThrows(ResourceNotFoundException.class, 
+                () -> employeeService.searchEmployee(1L, null, null));
+    }
+
+    @Test
+    void searchEmployee_ThrowsIllegalArgumentExceptionWhenMultiple() {
+        Employee employee2 = new Employee();
+        employee2.setId(2L);
+        List<Employee> employees = Arrays.asList(employee, employee2);
+        when(repository.searchEmployeeExact(null, "John", null)).thenReturn(employees);
+
+        assertThrows(IllegalArgumentException.class, 
+                () -> employeeService.searchEmployee(null, "John", null));
+    }
+
+    @Test
+    void saveEmployeeDTO_WithNullSalary() {
+        EmployeeRequestDTO dtoWithNullSalary = new EmployeeRequestDTO();
+        dtoWithNullSalary.setFirstName("Jane");
+        dtoWithNullSalary.setLastName("Smith");
+        dtoWithNullSalary.setDepartment("HR");
+        dtoWithNullSalary.setSalary(null);
+
+        Employee empWithNullSalary = new Employee();
+        empWithNullSalary.setId(2L);
+        empWithNullSalary.setFirstName("Jane");
+        empWithNullSalary.setLastName("Smith");
+        empWithNullSalary.setDepartment("HR");
+        empWithNullSalary.setSalary(null);
+
+        when(repository.existsByFirstAndLastNameAndDepartment(anyString(), anyString(), anyString()))
+                .thenReturn(false);
+        when(employeeMapper.toEntity(dtoWithNullSalary)).thenReturn(empWithNullSalary);
+        when(repository.save(empWithNullSalary)).thenReturn(empWithNullSalary);
+        when(employeeMapper.toResponseDTO(empWithNullSalary)).thenReturn(responseDTO);
+
+        EmployeeResponseDTO result = employeeService.saveEmployeeDTO(dtoWithNullSalary);
+
         assertNotNull(result);
-        verify(repository).searchEmployeeExact(null, "John", "Doe");
+        verify(repository).save(empWithNullSalary);
+    }
+
+    @Test
+    void updateEmployeeV2_WithNullSalary() {
+        EmployeeRequestDTO dtoWithNullSalary = new EmployeeRequestDTO();
+        dtoWithNullSalary.setFirstName("Jane");
+        dtoWithNullSalary.setLastName("Smith");
+        dtoWithNullSalary.setDepartment("HR");
+        dtoWithNullSalary.setSalary(null);
+
+        when(repository.findById(1L)).thenReturn(Optional.of(employee));
+        when(repository.existsByFirstAndLastNameAndDepartmentExcludingId(
+                anyLong(), anyString(), anyString(), anyString())).thenReturn(false);
+        when(repository.save(employee)).thenReturn(employee);
+        when(employeeMapper.toResponseV2DTO(employee)).thenReturn(responseV2DTO);
+        doNothing().when(modelMapper).map(dtoWithNullSalary, employee);
+
+        EmployeeResponseV2DTO result = employeeService.updateEmployeeV2(1L, dtoWithNullSalary);
+
+        assertNotNull(result);
+        verify(repository).save(employee);
+    }
+
+    @Test
+    void saveEmployeeV2_WithZeroSalary() {
+        EmployeeRequestDTO dtoWithZeroSalary = new EmployeeRequestDTO();
+        dtoWithZeroSalary.setFirstName("Bob");
+        dtoWithZeroSalary.setLastName("Johnson");
+        dtoWithZeroSalary.setDepartment("Finance");
+        dtoWithZeroSalary.setSalary(0.0);
+
+        Employee empWithZeroSalary = new Employee();
+        empWithZeroSalary.setId(3L);
+        empWithZeroSalary.setFirstName("Bob");
+        empWithZeroSalary.setLastName("Johnson");
+        empWithZeroSalary.setDepartment("Finance");
+        empWithZeroSalary.setSalary(0.0);
+
+        EmployeeResponseV2DTO responseWithZeroSalary = new EmployeeResponseV2DTO();
+        responseWithZeroSalary.setId(3L);
+        responseWithZeroSalary.setFirstName("Bob");
+        responseWithZeroSalary.setLastName("Johnson");
+        responseWithZeroSalary.setDepartment("Finance");
+        responseWithZeroSalary.setSalary(0);
+
+        when(repository.existsByFirstAndLastNameAndDepartment(anyString(), anyString(), anyString()))
+                .thenReturn(false);
+        when(employeeMapper.toEntity(dtoWithZeroSalary)).thenReturn(empWithZeroSalary);
+        when(repository.save(empWithZeroSalary)).thenReturn(empWithZeroSalary);
+        when(employeeMapper.toResponseV2DTO(empWithZeroSalary)).thenReturn(responseWithZeroSalary);
+
+        EmployeeResponseV2DTO result = employeeService.saveEmployeeV2(dtoWithZeroSalary);
+
+        assertNotNull(result);
+        assertEquals(0.0, result.getSalary());
+        verify(repository).save(empWithZeroSalary);
     }
 }

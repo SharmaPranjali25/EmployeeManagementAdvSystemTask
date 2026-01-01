@@ -11,6 +11,7 @@ import com.example.EmployeeManagementSystemAdvance.repository.EmployeeRepository
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,11 +30,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     // ===== V1 METHODS =====
     @Override
+    @Transactional
     public EmployeeResponseDTO saveEmployeeDTO(EmployeeRequestDTO dto) {
         if (repository.existsByFirstAndLastNameAndDepartment(
                 dto.getFirstName(), dto.getLastName(), dto.getDepartment())) {
             throw new DuplicateResourceException("Duplicate data alert cannot save");
         }
+        
         Employee saved = repository.save(employeeMapper.toEntity(dto));
         return employeeMapper.toResponseDTO(saved);
     }
@@ -63,6 +66,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional
     public EmployeeResponseDTO updateEmployeeDTO(Long id, EmployeeRequestDTO dto) {
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
@@ -78,6 +82,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional
     public void deleteEmployee(Long id) {
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
@@ -86,6 +91,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     // ===== V2 METHODS =====
     @Override
+    @Transactional
     public EmployeeResponseV2DTO saveEmployeeV2(EmployeeRequestDTO dto) {
         try {
             if (repository.existsByFirstAndLastNameAndDepartment(
@@ -132,6 +138,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    @Transactional
     public EmployeeResponseV2DTO updateEmployeeV2(Long id, EmployeeRequestDTO dto) {
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + id));
@@ -149,23 +156,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         return response;
     }
 
-//    @Override
-//    public EmployeeResponseV2DTO searchEmployee(Long id, String firstName, String lastName) {
-//        List<Employee> employees = repository.searchEmployeeExact(id, firstName, lastName);
-//
-//        if (employees.isEmpty()) {
-//            throw new ResourceNotFoundException("No employee found with given criteria");
-//        }
-//
-//        if (employees.size() > 1) {
-//            throw new IllegalArgumentException("Multiple employees found. Please refine your search criteria.");
-//        }
-//
-//        return employeeMapper.toResponseV2DTO(employees.get(0));
-//    }
     @Override
     public EmployeeResponseV2DTO searchEmployee(Long id, String firstName, String lastName) {
-
         if (id == null && firstName == null && lastName == null) {
             throw new IllegalArgumentException("Provide atleast one search criteria");
         }
@@ -183,5 +175,4 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return employeeMapper.toResponseV2DTO(employees.get(0));
     }
-
 }
