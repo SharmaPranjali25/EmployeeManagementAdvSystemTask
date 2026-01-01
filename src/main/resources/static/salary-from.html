@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Salary Record</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-reset {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(244, 67, 54, 0.3);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .required {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Create Salary Record</h1>
+        
+        <div id="alertBox" class="alert"></div>
+        
+        <form id="salaryForm">
+            <div class="form-group">
+                <label for="employeeId">Employee ID <span class="required">*</span></label>
+                <input type="number" id="employeeId" name="employeeId" required 
+                       placeholder="Enter Employee ID">
+            </div>
+
+            <div class="form-group">
+                <label for="employeeName">Employee Name</label>
+                <input type="text" id="employeeName" readonly 
+                       placeholder="Auto-filled after entering Employee ID">
+            </div>
+
+            <div class="form-group">
+                <label for="department">Department</label>
+                <input type="text" id="department" readonly 
+                       placeholder="Auto-filled after entering Employee ID">
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Salary Amount <span class="required">*</span></label>
+                <input type="number" id="amount" name="amount" step="0.01" 
+                       placeholder="Auto-filled from Employee record (editable)">
+            </div>
+
+            <div class="form-group">
+                <label for="effectiveDate">Effective Date <span class="required">*</span></label>
+                <input type="date" id="effectiveDate" name="effectiveDate" required>
+            </div>
+
+            <div class="form-group">
+                <label for="salaryType">Salary Type <span class="required">*</span></label>
+                <select id="salaryType" name="salaryType" required>
+                    <option value="">-- Select Salary Type --</option>
+                    <option value="BASE_SALARY">Base Salary</option>
+                    <option value="INCREMENT">Increment</option>
+                    <option value="ADJUSTMENT">Adjustment</option>
+                    <option value="BONUS">Bonus</option>
+                    <option value="DEDUCTION">Deduction</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="reason">Reason</label>
+                <input type="text" id="reason" name="reason" 
+                       placeholder="Optional: Reason for salary change">
+            </div>
+
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <p>Loading employee details...</p>
+            </div>
+
+            <div class="btn-container">
+                <button type="submit" class="btn-submit">Create Salary Record</button>
+                <button type="reset" class="btn-reset">Reset Form</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080/api';
+        
+        // Get form elements
+        const employeeIdInput = document.getElementById('employeeId');
+        const employeeNameInput = document.getElementById('employeeName');
+        const departmentInput = document.getElementById('department');
+        const amountInput = document.getElementById('amount');
+        const salaryForm = document.getElementById('salaryForm');
+        const alertBox = document.getElementById('alertBox');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        // Set today's date as default for effective date
+        document.getElementById('effectiveDate').valueAsDate = new Date();
+
+        // Auto-fetch employee details when Employee ID is entered
+        employeeIdInput.addEventListener('blur', async function() {
+            const employeeId = this.value.trim();
+            
+            if (!employeeId || employeeId === '') {
+                clearEmployeeFields();
+                return;
+            }
+
+            await fetchEmployeeDetails(employeeId);
+        });
+
+        // Also trigger on Enter key press
+        employeeIdInput.addEventListener('keypress', async function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const employeeId = this.value.trim();
+                if (employeeId) {
+                    await fetchEmployeeDetails(employeeId);
+                }
+            }
+        });
+
+        // Fetch employee details by ID
+        async function fetchEmployeeDetails(employeeId) {
+            showLoading(true);
+            hideAlert();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/v2/employees/${employeeId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Employee not found');
+                }
+
+                const employee = await response.json();
+                
+                // Populate fields with employee data
+                employeeNameInput.value = `${employee.firstName} ${employee.lastName}`;
+                departmentInput.value = employee.department || 'N/A';
+                
+                if (employee.salary && employee.salary > 0) {
+                    amountInput.value = employee.salary;
+                    amountInput.removeAttribute('readonly');
+                    showAlert('success', `✅ Employee found! Salary: ₹${employee.salary}`);
+                } else {
+                    amountInput.value = '';
+                    amountInput.removeAttribute('readonly');
+                    showAlert('info', '⚠️ Employee found but no salary set. Please enter amount manually.');
+                }
+
+            } catch (error) {
+                console.error('Error fetching employee:', error);
+                clearEmployeeFields();
+                showAlert('error', '❌ Employee not found with ID: ' + employeeId);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Clear employee fields
+        function clearEmployeeFields() {
+            employeeNameInput.value = '';
+            departmentInput.value = '';
+            amountInput.value = '';
+            amountInput.removeAttribute('readonly');
+        }
+
+        // Handle form submission
+        salaryForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                employeeId: parseInt(document.getElementById('employeeId').value),
+                amount: parseFloat(document.getElementById('amount').value) || null,
+                effectiveDate: document.getElementById('effectiveDate').value,
+                salaryType: document.getElementById('salaryType').value,
+                reason: document.getElementById('reason').value || null
+            };
+
+            showLoading(true);
+            hideAlert();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/v1/salaries/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert('success', `✅ ${result.message || 'Salary record created successfully!'}`);
+                    salaryForm.reset();
+                    clearEmployeeFields();
+                    document.getElementById('effectiveDate').valueAsDate = new Date();
+                } else {
+                    throw new Error(result.message || 'Failed to create salary record');
+                }
+
+            } catch (error) {
+                console.error('Error creating salary:', error);
+                showAlert('error', '❌ ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        // Show/hide loading indicator
+        function showLoading(show) {
+            loadingIndicator.style.display = show ? 'block' : 'none';
+        }
+
+        // Show alert message
+        function showAlert(type, message) {
+            alertBox.className = `alert alert-${type}`;
+            alertBox.textContent = message;
+            alertBox.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                hideAlert();
+            }, 5000);
+        }
+
+        // Hide alert
+        function hideAlert() {
+            alertBox.style.display = 'none';
+        }
+
+        // Reset form event
+        salaryForm.addEventListener('reset', function() {
+            clearEmployeeFields();
+            hideAlert();
+            document.getElementById('effectiveDate').valueAsDate = new Date();
+        });
+    </script>
+</body>
+</html>

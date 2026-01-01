@@ -24,3 +24,4 @@ public interface EmployeeService {
     // NEW: Search Employee (V2)
     EmployeeResponseV2DTO searchEmployee(Long id, String firstName, String lastName);
 }
+

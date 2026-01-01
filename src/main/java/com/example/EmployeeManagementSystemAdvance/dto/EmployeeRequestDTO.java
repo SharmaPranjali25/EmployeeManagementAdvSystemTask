@@ -11,5 +11,5 @@ public class EmployeeRequestDTO {
     private String firstName;
     private String lastName;
     private String department;
-    private double salary; // client can send salary
+    private Double salary; // client can send salary
 }

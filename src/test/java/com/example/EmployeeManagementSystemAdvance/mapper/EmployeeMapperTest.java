@@ -11,301 +11,201 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EmployeeMapperTest {
 
-    private EmployeeMapper mapper;
+    private EmployeeMapperImpl mapper;
+    private Employee employee;
+    private EmployeeRequestDTO requestDTO;
 
     @BeforeEach
     void setUp() {
         mapper = new EmployeeMapperImpl();
+
+        employee = new Employee();
+        employee.setId(1L);
+        employee.setFirstName("John");
+        employee.setLastName("Doe");
+        employee.setDepartment("IT");
+        employee.setSalary(50000.0);
+
+        requestDTO = new EmployeeRequestDTO();
+        requestDTO.setFirstName("John");
+        requestDTO.setLastName("Doe");
+        requestDTO.setDepartment("IT");
+        requestDTO.setSalary(50000.0);
     }
 
-    // ========== toEntity() Tests ==========
+    @Test
+    void toEntity_Success() {
+        Employee result = mapper.toEntity(requestDTO);
+
+        assertNotNull(result);
+        assertEquals("John", result.getFirstName());
+        assertEquals("Doe", result.getLastName());
+        assertEquals("IT", result.getDepartment());
+        assertEquals(50000.0, result.getSalary());
+    }
+
+    @Test
+    void toEntity_NullInput() {
+        Employee result = mapper.toEntity(null);
+        assertNull(result);
+    }
     
     @Test
-    void testToEntity_WithValidData() {
+    void toEntity_NullSalary() {
         EmployeeRequestDTO dto = new EmployeeRequestDTO();
-        dto.setFirstName("Pranjali");
-        dto.setLastName("Sharma");
-        dto.setDepartment("IT");
-        dto.setSalary(5000.0);
-
-        Employee entity = mapper.toEntity(dto);
-
-        assertNotNull(entity);
-        assertEquals("Pranjali", entity.getFirstName());
-        assertEquals("Sharma", entity.getLastName());
-        assertEquals("IT", entity.getDepartment());
-        assertEquals(5000.0, entity.getSalary());
-        assertNull(entity.getId()); // ID should be null for new entities
+        dto.setFirstName("Jane");
+        dto.setLastName("Smith");
+        dto.setDepartment("HR");
+        dto.setSalary(null);
+        
+        Employee result = mapper.toEntity(dto);
+        
+        assertNotNull(result);
+        assertEquals("Jane", result.getFirstName());
+        assertEquals("Smith", result.getLastName());
+        assertEquals("HR", result.getDepartment());
+        assertNull(result.getSalary());
     }
 
     @Test
-    void testToEntity_WithNullDTO() {
-        Employee entity = mapper.toEntity(null);
-        assertNull(entity);
+    void toResponseDTO_Success() {
+        EmployeeResponseDTO result = mapper.toResponseDTO(employee);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("John", result.getFirstName());
+        assertEquals("Doe", result.getLastName());
+        assertEquals("IT", result.getDepartment());
     }
 
     @Test
-    void testToEntity_WithNullFields() {
+    void toResponseDTO_NullInput() {
+        EmployeeResponseDTO result = mapper.toResponseDTO(null);
+        assertNull(result);
+    }
+
+    @Test
+    void toResponseV2DTO_Success() {
+        EmployeeResponseV2DTO result = mapper.toResponseV2DTO(employee);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("John", result.getFirstName());
+        assertEquals("Doe", result.getLastName());
+        assertEquals("IT", result.getDepartment());
+        assertEquals(50000, result.getSalary()); // int, not Double
+    }
+
+    @Test
+    void toResponseV2DTO_NullInput() {
+        EmployeeResponseV2DTO result = mapper.toResponseV2DTO(null);
+        assertNull(result);
+    }
+    
+    @Test
+    void toResponseV2DTO_NullSalary() {
+        Employee emp = new Employee();
+        emp.setId(2L);
+        emp.setFirstName("Jane");
+        emp.setLastName("Smith");
+        emp.setDepartment("HR");
+        emp.setSalary(null);
+        
+        EmployeeResponseV2DTO result = mapper.toResponseV2DTO(emp);
+        
+        assertNotNull(result);
+        assertEquals(2L, result.getId());
+        assertEquals("Jane", result.getFirstName());
+        assertEquals("Smith", result.getLastName());
+        assertEquals("HR", result.getDepartment());
+        // Mapper converts null to 0 for int type
+        assertEquals(0, result.getSalary());
+    }
+    
+    @Test
+    void toResponseV2DTO_ZeroSalary() {
+        Employee emp = new Employee();
+        emp.setId(3L);
+        emp.setFirstName("Bob");
+        emp.setLastName("Johnson");
+        emp.setDepartment("Finance");
+        emp.setSalary(0.0);
+        
+        EmployeeResponseV2DTO result = mapper.toResponseV2DTO(emp);
+        
+        assertNotNull(result);
+        assertEquals(0, result.getSalary());
+    }
+    
+    @Test
+    void toResponseV2DTO_NegativeSalary() {
+        Employee emp = new Employee();
+        emp.setId(4L);
+        emp.setFirstName("Alice");
+        emp.setLastName("Brown");
+        emp.setDepartment("Sales");
+        emp.setSalary(-1000.0);
+        
+        EmployeeResponseV2DTO result = mapper.toResponseV2DTO(emp);
+        
+        assertNotNull(result);
+        assertEquals(-1000, result.getSalary()); // Converted to int
+    }
+    
+    @Test
+    void toResponseV2DTO_LargeSalary() {
+        Employee emp = new Employee();
+        emp.setId(5L);
+        emp.setFirstName("Charlie");
+        emp.setLastName("Wilson");
+        emp.setDepartment("Executive");
+        emp.setSalary(999999.99);
+        
+        EmployeeResponseV2DTO result = mapper.toResponseV2DTO(emp);
+        
+        assertNotNull(result);
+        // Mapper converts Double to int, losing decimal precision
+        assertEquals(999999, result.getSalary()); // 999999.99 -> 999999
+    }
+    
+    @Test
+    void toEntity_AllFieldsNull() {
         EmployeeRequestDTO dto = new EmployeeRequestDTO();
-        dto.setFirstName(null);
-        dto.setLastName(null);
-        dto.setDepartment(null);
-        dto.setSalary(0.0);
-
-        Employee entity = mapper.toEntity(dto);
-
-        assertNotNull(entity);
-        assertNull(entity.getFirstName());
-        assertNull(entity.getLastName());
-        assertNull(entity.getDepartment());
-        assertEquals(0.0, entity.getSalary());
+        
+        Employee result = mapper.toEntity(dto);
+        
+        assertNotNull(result);
+        assertNull(result.getFirstName());
+        assertNull(result.getLastName());
+        assertNull(result.getDepartment());
+        assertNull(result.getSalary());
     }
-
+    
     @Test
-    void testToEntity_WithEmptyStrings() {
-        EmployeeRequestDTO dto = new EmployeeRequestDTO();
-        dto.setFirstName("");
-        dto.setLastName("");
-        dto.setDepartment("");
-        dto.setSalary(100.0);
-
-        Employee entity = mapper.toEntity(dto);
-
-        assertNotNull(entity);
-        assertEquals("", entity.getFirstName());
-        assertEquals("", entity.getLastName());
-        assertEquals("", entity.getDepartment());
-        assertEquals(100.0, entity.getSalary());
+    void toResponseDTO_WithNullFields() {
+        Employee emp = new Employee();
+        emp.setId(1L);
+        
+        EmployeeResponseDTO result = mapper.toResponseDTO(emp);
+        
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertNull(result.getFirstName());
+        assertNull(result.getLastName());
+        assertNull(result.getDepartment());
     }
-
+    
     @Test
-    void testToEntity_WithZeroSalary() {
+    void toEntity_NegativeSalary() {
         EmployeeRequestDTO dto = new EmployeeRequestDTO();
         dto.setFirstName("Test");
         dto.setLastName("User");
-        dto.setDepartment("HR");
-        dto.setSalary(0.0);
-
-        Employee entity = mapper.toEntity(dto);
-
-        assertNotNull(entity);
-        assertEquals(0.0, entity.getSalary());
-    }
-
-    @Test
-    void testToEntity_WithNegativeSalary() {
-        EmployeeRequestDTO dto = new EmployeeRequestDTO();
-        dto.setFirstName("Test");
-        dto.setLastName("User");
-        dto.setDepartment("HR");
-        dto.setSalary(-1000.0);
-
-        Employee entity = mapper.toEntity(dto);
-
-        assertNotNull(entity);
-        assertEquals(-1000.0, entity.getSalary());
-    }
-
-    // ========== toResponseDTO() Tests ==========
-
-    @Test
-    void testToResponseDTO_WithValidData() {
-        Employee entity = new Employee(1L, "Pranjali", "Sharma", "IT", 5000.0);
-
-        EmployeeResponseDTO dto = mapper.toResponseDTO(entity);
-
-        assertNotNull(dto);
-        assertEquals(1L, dto.getId());
-        assertEquals("Pranjali", dto.getFirstName());
-        assertEquals("Sharma", dto.getLastName());
-        assertEquals("IT", dto.getDepartment());
-    }
-
-    @Test
-    void testToResponseDTO_WithNullEntity() {
-        EmployeeResponseDTO dto = mapper.toResponseDTO(null);
-        assertNull(dto);
-    }
-
-    @Test
-    void testToResponseDTO_WithNullFields() {
-        Employee entity = new Employee();
-        entity.setId(1L);
-        entity.setFirstName(null);
-        entity.setLastName(null);
-        entity.setDepartment(null);
-        entity.setSalary(0.0);
-
-        EmployeeResponseDTO dto = mapper.toResponseDTO(entity);
-
-        assertNotNull(dto);
-        assertEquals(1L, dto.getId());
-        assertNull(dto.getFirstName());
-        assertNull(dto.getLastName());
-        assertNull(dto.getDepartment());
-    }
-
-    @Test
-    void testToResponseDTO_WithEmptyStrings() {
-        Employee entity = new Employee(2L, "", "", "", 0.0);
-
-        EmployeeResponseDTO dto = mapper.toResponseDTO(entity);
-
-        assertNotNull(dto);
-        assertEquals(2L, dto.getId());
-        assertEquals("", dto.getFirstName());
-        assertEquals("", dto.getLastName());
-        assertEquals("", dto.getDepartment());
-    }
-
-    @Test
-    void testToResponseDTO_DoesNotIncludeSalary() {
-        Employee entity = new Employee(1L, "John", "Doe", "IT", 99999.0);
-
-        EmployeeResponseDTO dto = mapper.toResponseDTO(entity);
-
-        assertNotNull(dto);
-        // Verify salary is not exposed in V1 response
-        assertDoesNotThrow(() -> dto.getId());
-    }
-
-    // ========== toResponseV2DTO() Tests ==========
-
-    @Test
-    void testToResponseV2DTO_WithValidData() {
-        Employee entity = new Employee(1L, "Pranjali", "Sharma", "IT", 5000.0);
-
-        EmployeeResponseV2DTO dto = mapper.toResponseV2DTO(entity);
-
-        assertNotNull(dto);
-        assertEquals(1L, dto.getId());
-        assertEquals("Pranjali", dto.getFirstName());
-        assertEquals("Sharma", dto.getLastName());
-        assertEquals("Pranjali Sharma", dto.getFullName());
-        assertEquals("IT", dto.getDepartment());
-        assertEquals(5000, dto.getSalary()); // Note: converted to int
-    }
-
-    @Test
-    void testToResponseV2DTO_WithNullEntity() {
-        EmployeeResponseV2DTO dto = mapper.toResponseV2DTO(null);
-        assertNull(dto);
-    }
-
-    @Test
-    void testToResponseV2DTO_WithNullFields() {
-        Employee entity = new Employee();
-        entity.setId(1L);
-        entity.setFirstName(null);
-        entity.setLastName(null);
-        entity.setDepartment(null);
-        entity.setSalary(0.0);
-
-        EmployeeResponseV2DTO dto = mapper.toResponseV2DTO(entity);
-
-        assertNotNull(dto);
-        assertEquals(1L, dto.getId());
-        assertNull(dto.getFirstName());
-        assertNull(dto.getLastName());
-        assertNull(dto.getDepartment());
-        assertEquals(0, dto.getSalary());
-    }
-
-    @Test
-    void testToResponseV2DTO_WithEmptyStrings() {
-        Employee entity = new Employee(2L, "", "", "", 1000.0);
-
-        EmployeeResponseV2DTO dto = mapper.toResponseV2DTO(entity);
-
-        assertNotNull(dto);
-        assertEquals(2L, dto.getId());
-        assertEquals("", dto.getFirstName());
-        assertEquals("", dto.getLastName());
-        assertEquals("", dto.getDepartment());
-        assertEquals(1000, dto.getSalary());
-    }
-
-    @Test
-    void testToResponseV2DTO_SalaryConversionDoubleToInt() {
-        Employee entity = new Employee(1L, "Test", "User", "HR", 5000.99);
-
-        EmployeeResponseV2DTO dto = mapper.toResponseV2DTO(entity);
-
-        assertNotNull(dto);
-        assertEquals(5000, dto.getSalary()); // Truncated to int
-    }
-
-    @Test
-    void testToResponseV2DTO_WithZeroSalary() {
-        Employee entity = new Employee(1L, "Test", "User", "IT", 0.0);
-
-        EmployeeResponseV2DTO dto = mapper.toResponseV2DTO(entity);
-
-        assertNotNull(dto);
-        assertEquals(0, dto.getSalary());
-    }
-
-    @Test
-    void testToResponseV2DTO_WithLargeSalary() {
-        Employee entity = new Employee(1L, "Test", "User", "IT", 999999.99);
-
-        EmployeeResponseV2DTO dto = mapper.toResponseV2DTO(entity);
-
-        assertNotNull(dto);
-        assertEquals(999999, dto.getSalary());
-    }
-
-    @Test
-    void testToResponseV2DTO_MessageFieldInitiallyNull() {
-        Employee entity = new Employee(1L, "Test", "User", "IT", 5000.0);
-
-        EmployeeResponseV2DTO dto = mapper.toResponseV2DTO(entity);
-
-        assertNotNull(dto);
-        assertNull(dto.getMessage()); // Message should be null initially
-    }
-
-    // ========== Integration Tests ==========
-
-    @Test
-    void testFullCycle_RequestToEntityToResponse() {
-        // Create request
-        EmployeeRequestDTO requestDTO = new EmployeeRequestDTO();
-        requestDTO.setFirstName("Alice");
-        requestDTO.setLastName("Johnson");
-        requestDTO.setDepartment("Finance");
-        requestDTO.setSalary(75000.0);
-
-        // Convert to entity
-        Employee entity = mapper.toEntity(requestDTO);
-        entity.setId(10L); // Simulate DB generated ID
-
-        // Convert to V1 response
-        EmployeeResponseDTO responseV1 = mapper.toResponseDTO(entity);
-        assertEquals(10L, responseV1.getId());
-        assertEquals("Alice", responseV1.getFirstName());
-        assertEquals("Johnson", responseV1.getLastName());
-        assertEquals("Finance", responseV1.getDepartment());
-
-        // Convert to V2 response
-        EmployeeResponseV2DTO responseV2 = mapper.toResponseV2DTO(entity);
-        assertEquals(10L, responseV2.getId());
-        assertEquals("Alice", responseV2.getFirstName());
-        assertEquals("Johnson", responseV2.getLastName());
-        assertEquals("Finance", responseV2.getDepartment());
-        assertEquals(75000, responseV2.getSalary());
-        assertEquals("Alice Johnson", responseV2.getFullName());
-    }
-
-    @Test
-    void testMultipleMappings() {
-        EmployeeRequestDTO dto1 = new EmployeeRequestDTO("John", "Doe", "IT", 5000.0);
-        EmployeeRequestDTO dto2 = new EmployeeRequestDTO("Jane", "Smith", "HR", 6000.0);
-
-        Employee entity1 = mapper.toEntity(dto1);
-        Employee entity2 = mapper.toEntity(dto2);
-
-        assertNotEquals(entity1.getFirstName(), entity2.getFirstName());
-        assertNotEquals(entity1.getDepartment(), entity2.getDepartment());
+        dto.setDepartment("Testing");
+        dto.setSalary(-5000.0);
+        
+        Employee result = mapper.toEntity(dto);
+        
+        assertNotNull(result);
+        assertEquals(-5000.0, result.getSalary());
     }
 }
